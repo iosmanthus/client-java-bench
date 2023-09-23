@@ -131,7 +131,7 @@ public class Flow implements Runnable, Closeable {
         ByteString key = ByteString.copyFromUtf8(prefix + id + "_" + Thread.currentThread().getId());
         try {
             client.putIfAbsent(key, key, ttl);
-            client.put(ByteString.copyFrom(new byte[]{0, 1}), key);
+            client.put(ByteString.copyFrom(new byte[]{0x00, 0x21}), key);
             client.put(ByteString.copyFrom(infiniteEnd), key);
         } catch (RawCASConflictException ignored) {
         } catch (Exception e) {
