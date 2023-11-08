@@ -158,7 +158,7 @@ public class Flow implements Runnable, Closeable {
       client.get(key);
     } catch (Exception e) {
       REQUEST_FAILURE.labels(typeGet).inc();
-      logger.error(errMsg(typeGet, key.toStringUtf8(), e));
+      logTxnErr(typeGet, key.toStringUtf8(), e);
       if (isFatalError(e)) {
         throw e;
       }
@@ -171,7 +171,7 @@ public class Flow implements Runnable, Closeable {
       } catch (RawCASConflictException ignored) {
       } catch (Exception e) {
         REQUEST_FAILURE.labels(typePutIfAbsent).inc();
-        logger.error(errMsg(typePutIfAbsent, key.toStringUtf8(), e));
+        logTxnErr(typePutIfAbsent, key.toStringUtf8(), e);
         if (isFatalError(e)) {
           throw e;
         }
@@ -182,7 +182,7 @@ public class Flow implements Runnable, Closeable {
           client.put(key, key, ttl);
         } catch (Exception e) {
           REQUEST_FAILURE.labels(typePut).inc();
-          logger.error(errMsg(typePut, key.toStringUtf8(), e));
+          logTxnErr(typePut, key.toStringUtf8(), e);
           if (isFatalError(e)) {
             throw e;
           }
@@ -191,8 +191,12 @@ public class Flow implements Runnable, Closeable {
     }
   }
 
+  void logTxnErr(String method, String key, Exception e) {
+    logger.error(errMsg(method, key, e), e);
+  }
+
   String errMsg(String method, String key, Exception e) {
-    return String.format("encounter error while %s [key=%s] [err=%s]", method, key, e.toString());
+    return String.format("encounter error while %s [key=%s] [err=%s]", method, key, e.getMessage());
   }
 
   boolean isFatalError(Exception e) {
