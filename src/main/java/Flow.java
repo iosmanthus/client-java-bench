@@ -13,6 +13,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -161,6 +162,24 @@ public class Flow implements Runnable, Closeable {
       logTxnErr(typeGet, key.toStringUtf8(), e);
       if (isFatalError(e)) {
         throw e;
+      }
+    }
+
+    if (Math.random() < 0.5) {
+      byte [] v = new byte[1024];
+      Arrays.fill(v, (byte)79);
+      ByteString value = ByteString.copyFrom(v);
+      try {
+        client.put(ByteString.copyFromUtf8("uxxxx").concat(key), value);
+        client.put(ByteString.copyFromUtf8("vxxxx").concat(key), value);
+        client.put(ByteString.copyFromUtf8("yxxxx").concat(key), value);
+        client.put(ByteString.copyFromUtf8("zxxxx").concat(key), value);
+      } catch (Exception e) {
+        REQUEST_FAILURE.labels(typePut).inc();
+        logTxnErr(typePut, key.toStringUtf8(), e);
+        if (isFatalError(e)) {
+          throw e;
+        }
       }
     }
 
